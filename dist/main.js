@@ -1,23 +1,24 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.appContainer = exports.app = exports.appBindings = void 0;
+const types_1 = require("./types");
+const inversify_1 = require("inversify");
 const app_1 = require("./app");
 const exception_filter_1 = require("./errors/exception.filter");
 const logger_services_1 = require("./logger/logger.services");
 const users_controller_1 = require("./users/users.controller");
+exports.appBindings = new inversify_1.ContainerModule((bind) => {
+    bind(types_1.TYPES.ILogger).to(logger_services_1.LoggerService);
+    bind(types_1.TYPES.ExceptionFilter).to(exception_filter_1.ExceptionFilter);
+    bind(types_1.TYPES.UserController).to(users_controller_1.UserController);
+    bind(types_1.TYPES.Application).to(app_1.App);
+});
 function bootstrap() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const logger = new logger_services_1.LoggerService();
-        const app = new app_1.App(logger, new users_controller_1.UserController(logger), new exception_filter_1.ExceptionFilter(logger));
-        yield app.init();
-    });
+    const appContainer = new inversify_1.Container();
+    appContainer.load(exports.appBindings);
+    const app = appContainer.get(types_1.TYPES.Application);
+    app.init();
+    return { app, appContainer };
 }
-bootstrap();
+_a = bootstrap(), exports.app = _a.app, exports.appContainer = _a.appContainer;
